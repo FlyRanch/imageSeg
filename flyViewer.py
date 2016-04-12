@@ -24,7 +24,7 @@ WindowTemplate, TemplateBaseClass = pg.Qt.loadUiType(uiFile)
 import tifffile
 import numpy as np
 
-import muscle_model as mm
+from geometric_models import muscle_model as mm
 
 default_rframe_data = {'a1': np.array([ 51.5848967 ,  -5.93928407]),
                        'a2': np.array([ -0.09151179,  88.42505672]),
@@ -235,10 +235,13 @@ class MainWindow(TemplateBaseClass):
         self.ui.signalView.setModel(self.lst_model)
         self.color_dict = dict()
         import shelve
-        fname = os.path.join(self.CurrentDirPath,'model_fits.shelve')
-        self.signalshelf = shelve.open(fname)
+        fname = os.path.join(self.CurrentDirPath,'extracted_signals.hdf5')
+        import h5py
+        self.signalshelf = h5py.File(fname)#shelve.open(fname)
+        #self.signalshelf = dict()
         if len(self.signalshelf.keys()) == 0:
-            self.signalshelf['pxmean'] = np.mean(np.mean(self.images,axis = 0),axis = 0)
+            self.signalshelf['pxmean'] = np.mean(np.mean(self.images,axis = 1),axis = 1)
+            print np.shape(self.signalshelf['pxmean'])
         print np.shape(self.images)
         #[self.signalshelf.update({str(mname):sig}) for mname,sig in zip(fits,muscles)]
         for n,key in enumerate(self.signalshelf.keys()):                   
@@ -358,7 +361,7 @@ class MainWindow(TemplateBaseClass):
 
     def loadModel(self):
         import cPickle
-        f = open('anatomy_outlines.cpkl','rb')
+        f = open('anatomy_outlines.cpkl','r')
         ###f = open('/media/flyranch/ICRA_2015/model_data.cpkl','rb')
         anatomy_outlines = cPickle.load(f)
         f.close()
@@ -488,7 +491,7 @@ class MainWindow(TemplateBaseClass):
         #print self.ui.fileTree.selectedItems()[0].data(0,QtCore.Qt.UserRole).toPyObject()
 
     def extract_signals(self):
-        import muscle_model as mm
+        #import muscle_model as mm
         import numpy as np
         import h5py
         import cv2
